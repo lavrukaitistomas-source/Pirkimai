@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pirkimų AI Komanda</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0d0b;
+  --surface: #111510;
+  --surface2: #171d15;
+  --border: #232b21;
+  --accent: #4ade80;
+  --accent2: #86efac;
+  --text: #ddeedd;
+  --muted: #5a7060;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+}
+
+/* NOISE */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:1000;
+}
+
+header {
+  padding: 28px 40px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.logo {
+  width:48px; height:48px;
+  background: var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Syne',sans-serif;
+  font-weight:800; font-size:22px; color:#050805;
+  border-radius:10px;
+}
+.brand-name {
+  font-family:'Syne',sans-serif;
+  font-weight:800; font-size:22px;
+  letter-spacing:-0.02em;
+}
+.brand-name span { color: var(--accent); }
+.brand-sub { font-size:11px; color:var(--muted); margin-top:3px; letter-spacing:0.06em; }
+
+/* API BAR */
+.api-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 40px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.api-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; white-space:nowrap; }
+.api-input {
+  flex:1; max-width:440px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-family:'DM Mono',monospace;
+  font-size:13px;
+  padding: 8px 14px;
+  outline:none;
+  border-radius:6px;
+  transition: border-color 0.2s;
+}
+.api-input:focus { border-color: var(--accent); }
+.api-status { font-size:12px; color:var(--muted); }
+.api-link {
+  margin-left:auto;
+  font-size:11px;
+  color:var(--accent);
+  text-decoration:none;
+  border:1px solid var(--border);
+  padding:6px 14px;
+  border-radius:6px;
+  letter-spacing:0.06em;
+  transition: all 0.2s;
+}
+.api-link:hover { background: rgba(74,222,128,0.08); border-color:var(--accent); }
+
+/* HERO */
+.hero {
+  padding: 60px 40px 40px;
+  text-align: center;
+}
+.hero h1 {
+  font-family:'Syne',sans-serif;
+  font-size: clamp(32px,6vw,56px);
+  font-weight:800;
+  letter-spacing:-0.03em;
+  line-height:1.1;
+  margin-bottom:16px;
+}
+.hero h1 em { color:var(--accent); font-style:normal; }
+.hero p {
+  font-size:14px;
+  color:var(--muted);
+  max-width:480px;
+  margin:0 auto 40px;
+  line-height:1.7;
+}
+
+/* AGENTS GRID */
+.agents {
+  padding: 0 40px 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.agent-card::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 0% 0%, var(--card-color) 0%, transparent 60%);
+  opacity:0;
+  transition: opacity 0.3s;
+}
+
+.agent-card:hover {
+  border-color: var(--card-color);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.agent-card:hover::before { opacity:0.06; }
+
+.card-icon {
+  font-size:36px;
+  margin-bottom:16px;
+  display:block;
+}
+
+.card-title {
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:18px;
+  margin-bottom:8px;
+  letter-spacing:-0.01em;
+}
+
+.card-desc {
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.7;
+  margin-bottom:18px;
+}
+
+.card-features {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.feat-tag {
+  font-size:10px;
+  padding:3px 9px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  color:var(--muted);
+  letter-spacing:0.04em;
+}
+
+.card-arrow {
+  position:absolute;
+  top:24px; right:24px;
+  font-size:18px;
+  color:var(--border);
+  transition: all 0.2s;
+}
+.agent-card:hover .card-arrow {
+  color:var(--card-color);
+  transform:translateX(4px);
+}
+
+/* FOOTER */
+footer {
+  text-align:center;
+  padding:24px;
+  border-top:1px solid var(--border);
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:0.06em;
+}
+
+@media (max-width:600px) {
+  header, .api-bar, .hero, .agents { padding-left:20px; padding-right:20px; }
+  .hero { padding-top:40px; }
+  .agents { grid-template-columns:1fr; }
+  .api-link { display:none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">P</div>
+  <div>
+    <div class="brand-name">Pirkimų <span>AI Komanda</span></div>
+    <div class="brand-sub">Medinių paletių pirkimo specialistai · 6 agentai</div>
+  </div>
+</header>
+
+<div class="api-bar">
+  <span class="api-label">🔑 API Raktas</span>
+  <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-api03-..."
+    oninput="saveApiKey(this.value)" />
+  <span class="api-status" id="apiStatus">⬤ Neįvestas</span>
+  <a class="api-link" href="https://console.anthropic.com/settings/keys" target="_blank">GAUTI RAKTĄ →</a>
+</div>
+
+<div class="hero">
+  <h1>Jūsų <em>AI Komanda</em><br>pirkimams</h1>
+  <p>6 specializuoti dirbtinio intelekto agentai medinių paletių pirkimo procesui. Kiekvienas turi savo sritį ir ekspertizę.</p>
+</div>
+
+<div class="agents">
+
+  <a class="agent-card" href="rinka.html" style="--card-color:#4ade80">
+    <span class="card-arrow">→</span>
+    <span class="card-icon">📊</span>
+    <div class="card-title">Rinkos Žvalgybos Analitikas</div>
+    <div class="card-desc">Medienos kainų tendencijos, sezoniniai svyravimai, regionų palyginimas ir rinkos prognozės.</div>
+    <div class="card-features">
+      <span class="feat-tag">Kainų grafikai</span>
+      <span class="feat-tag">Web paieška</span>
+      <span class="feat-tag">Prognozės</span>
+      <span class="feat-tag">LT/PL/DE/LV</span>
+    </div>
+  </a>
+
+  <a class="agent-card" href="tiekejus.html" style="--card-color:#60a5fa">
+    <span class="card-arrow">→</span>
+    <span class="card-icon">🔍</span>
+    <div class="card-title">Tiekėjų Analitikas</div>
+    <div class="card-desc">Tiekėjų paieška, vertinimas pagal patikimumą ir pajėgumus, rizikos analizė ir alternatyvų pasiūlymas.</div>
+    <div class="card-features">
+      <span class="feat-tag">Vertinimas</span>
+      <span class="feat-tag">Rizika</span>
+      <span class="feat-tag">Palyginimas</span>
+    </div>
+  </a>
+
+  <a class="agent-card" href="kainos.html" style="--card-color:#f87171">
+    <span class="card-arrow">→</span>
+    <span class="card-icon">💰</span>
+    <div class="card-title">Kainų Derybininkas</div>
+    <div class="card-desc">Derybų strategijos, kainų analizė, nuolaidų gavimas ir kainų formavimo principai.</div>
+    <div class="card-features">
+      <span class="feat-tag">Derybos</span>
+      <span class="feat-tag">Strategija</span>
+      <span class="feat-tag">Nuolaidos</span>
+    </div>
+  </a>
+
+  <a class="agent-card" href="kokybe.html" style="--card-color:#34d399">
+    <span class="card-arrow">→</span>
+    <span class="card-icon">✅</span>
+    <div class="card-title">Kokybės Kontrolierius</div>
+    <div class="card-desc">ISPM-15 standartas, EUR/EPAL reikalavimai, medienos kokybės tikrinimas ir defektų identifikavimas.</div>
+    <div class="card-features">
+      <span class="feat-tag">ISPM-15</span>
+      <span class="feat-tag">EUR/EPAL</span>
+      <span class="feat-tag">Standartai</span>
+    </div>
+  </a>
+
+  <a class="agent-card" href="logistika.html" style="--card-color:#fbbf24">
+    <span class="card-arrow">→</span>
+    <span class="card-icon">🚚</span>
+    <div class="card-title">Logistikos Koordinatorius</div>
+    <div class="card-desc">Pristatymo terminų planavimas, transporto optimizavimas, Incoterms sąlygos ir sandėliavimo sprendimai.</div>
+    <div class="card-features">
+      <span class="feat-tag">Incoterms</span>
+      <span class="feat-tag">Transportas</span>
+      <span class="feat-tag">Terminai</span>
+    </div>
+  </a>
+
+  <a class="agent-card" href="sutartys.html" style="--card-color:#a78bfa">
+    <span class="card-arrow">→</span>
+    <span class="card-icon">📄</span>
+    <div class="card-title">Sutarčių Specialistas</div>
+    <div class="card-desc">Pirkimo sutarčių struktūra, svarbios sąlygos, garantijų nuostatos ir kainų indeksavimas.</div>
+    <div class="card-features">
+      <span class="feat-tag">Sutartys</span>
+      <span class="feat-tag">Garantijos</span>
+      <span class="feat-tag">Sąlygos</span>
+    </div>
+  </a>
+
+</div>
+
+<footer>PIRKIMŲ AI KOMANDA · Medinių paletių pirkimo sistema</footer>
+
+<script>
+function saveApiKey(val) {
+  localStorage.setItem('pirkimai_api_key', val);
+  const status = document.getElementById('apiStatus');
+  if (val.startsWith('sk-ant-')) {
+    status.textContent = '⬤ Aktyvus';
+    status.style.color = '#4ade80';
+  } else if (val.length > 0) {
+    status.textContent = '⬤ Neteisingas';
+    status.style.color = '#f87171';
+  } else {
+    status.textContent = '⬤ Neįvestas';
+    status.style.color = '#5a7060';
+  }
+}
+
+// Load saved key
+window.onload = () => {
+  const saved = localStorage.getItem('pirkimai_api_key');
+  if (saved) {
+    document.getElementById('apiKey').value = saved;
+    saveApiKey(saved);
+  }
+};
+</script>
+</body>
+</html>
